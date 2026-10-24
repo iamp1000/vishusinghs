@@ -69,23 +69,56 @@ function App() {
     const id = ++requestId.current;
     setLyrics([]); setPlainLyrics(""); setLyricState(track ? "Finding synchronized lyrics…" : "Play a song to begin");
     if (!track) return () => { cancelled = true; };
-    const query = new URLSearchParams({ track_name: track.name, artist_name: track.artists });
-    fetch(LRCLIB + "/get?" + query.toString(), { headers: { "Accept": "application/json" } })
-      .then(r => { if (!r.ok) throw new Error("No exact match"); return r.json(); })
+    const headers = { "Accept": "application/json" };
+    const isCurrent = () => !cancelled && id === requestId.current;
+    const applyLyrics = data => {
+      if (!isCurrent() || !data) return false;
+      if (data.syncedLyrics) {
+        const parsed = [];
+        data.syncedLyrics.split(/\r?\n/).forEach(line => {
+          const tags = [...line.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
+          const textMatch = line.replace(/\[(?:\d{1,2}:\d{2})(?:[.:]\d{1,3})?\]/g, "").trim();
+          tags.forEach(tag => {
+            const fraction = tag[3] ? Number(("0." + tag[3])) * 1000 : 0;
+            parsed.push({ time: Number(tag[1]) * 60000 + Number(tag[2]) * 1000 + fraction, text: textMatch });
+          });
+        });
+        parsed.sort((a, b) => a.time - b.time);
+        if (parsed.length) {
+          setLyrics(parsed); setPlainLyrics(""); setLyricState("Synchronized lyrics"); return true;
+        }
+      }
+      if (data.plainLyrics) {
+        setPlainLyrics(data.plainLyrics); setLyrics([]); setLyricState("Unsynchronized lyrics"); return true;
+      }
+      return false;
+    };
+    const exactQuery = new URLSearchParams({ track_name: track.name, artist_name: track.artists });
+    fetch(LRCLIB + "/get?" + exactQuery.toString(), { headers })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error("No exact match")))
       .then(data => {
-        if (cancelled || id !== requestId.current) return;
-        if (data.syncedLyrics) {
-          const parsed = data.syncedLyrics.split(/\r?\n/).map(line => {
-            const m = line.match(/^\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\](.*)$/);
-            if (!m) return null;
-            return { time: Number(m[1]) * 60000 + Number(m[2]) * 1000, text: m[3].trim() };
-          }).filter(Boolean);
-          setLyrics(parsed); setLyricState(parsed.length ? "Synchronized lyrics" : "No timed lyrics available");
-        } else if (data.plainLyrics) {
-          setPlainLyrics(data.plainLyrics); setLyricState("Unsynchronized lyrics");
-        } else throw new Error("Lyrics not available");
+        if (applyLyrics(data)) return;
+        const searchQuery = new URLSearchParams({ q: [track.name, track.artists].filter(Boolean).join(" ") });
+        return fetch(LRCLIB + "/search?" + searchQuery.toString(), { headers })
+          .then(r => r.ok ? r.json() : Promise.reject(new Error("No search results")))
+          .then(results => {
+            if (!isCurrent()) return;
+            const normalize = value => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+            const wantedTitle = normalize(track.name);
+            const wantedArtist = normalize(track.artists.split(",")[0]);
+            const ranked = (Array.isArray(results) ? results : []).map(item => {
+              const title = normalize(item.trackName);
+              const artist = normalize(item.artistName);
+              const score = (title === wantedTitle ? 4 : title.includes(wantedTitle) || wantedTitle.includes(title) ? 2 : 0)
+                + (artist === wantedArtist ? 3 : artist.includes(wantedArtist) || wantedArtist.includes(artist) ? 1 : 0)
+                + (item.syncedLyrics ? 1 : 0);
+              return { item, score };
+            }).sort((a, b) => b.score - a.score);
+            const best = ranked.find(entry => entry.score >= 4 && (entry.item.syncedLyrics || entry.item.plainLyrics));
+            if (!best || !applyLyrics(best.item)) throw new Error("Lyrics unavailable");
+          });
       })
-      .catch(() => { if (!cancelled) setLyricState("Lyrics unavailable for this track"); });
+      .catch(() => { if (isCurrent()) setLyricState("Lyrics unavailable for this track"); });
     return () => { cancelled = true; };
   }, [track?.uri]);
 
