@@ -8,11 +8,14 @@ VishuSingh is an experimental Spicetify custom app with a dedicated karaoke-styl
 
 ## Features
 - Sing-focused dark interface with album artwork and immersive mode.
-- Timed lyrics from LRCLIB when available; plain-lyrics fallback.
-- Click a timed lyric line to seek playback.
+- Timed lyrics from LRCLIB with exact-track lookup and ranked search fallback; plain-lyrics fallback.
+- Parses multiple LRC timestamps on one line and keeps timed lines ordered.
+- Click a timed lyric line to seek playback; active-line highlighting and optional auto-scroll.
 - Spotify play/pause, previous/next, progress, and seeking controls.
-- Responsive layout and explicit loading/error states.
-- No fake vocal slider: audio processing is marked unavailable until it works.
+- Keyboard shortcuts: Space (play/pause), Left/Right (seek 5 seconds), N (next), B (previous), when focus is not in an input.
+- Adjustable lyric size and auto-scroll preference persisted locally.
+- Responsive layout, immersive mode, settings panel, and explicit loading/error states.
+- No fake vocal slider: audio processing is marked unavailable until a real audio route works.
 
 ## Install in Spicetify on Windows
 
@@ -119,6 +122,8 @@ The repository also retains the upstream Karafilt browser-extension code and MIT
 - [x] Spotify track metadata and playback controls
 - [x] LRCLIB timed/plain lyric lookup
 - [x] Click-to-seek lyric lines
+- [x] Exact lyric lookup with search fallback and multi-timestamp LRC parsing
+- [x] Persistent lyric display settings and playback keyboard shortcuts
 - [ ] Test and fix against supported Spotify + Spicetify versions
 - [ ] Verify real-time audio capture and output/mixing
 - [ ] Integrate vocal-removal engine into a proven audio path
