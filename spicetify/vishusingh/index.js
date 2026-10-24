@@ -108,7 +108,7 @@ function App() {
           .then(r => r.ok ? r.json() : Promise.reject(new Error("No search results")))
           .then(results => {
             if (!isCurrent()) return;
-            const normalize = value => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+            const normalize = value => String(value || "").toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
             const wantedTitle = normalize(track.name);
             const wantedArtist = normalize(track.artists.split(",")[0]);
             const ranked = (Array.isArray(results) ? results : []).map(item => {
