@@ -30,6 +30,8 @@ function App() {
   const [autoScroll, setAutoScroll] = useState(() => { try { return Spicetify.LocalStorage?.get("vishusingh:autoScroll") !== "false"; } catch (_) { return true; } });
   const requestId = useRef(0);
   const rootRef = useRef(null);
+  const playbackRef = useRef({ playing, position, duration: 0 });
+  playbackRef.current = { playing, position, duration: track?.duration || 0 };
 
   useEffect(() => {
     let alive = true;
@@ -97,7 +99,8 @@ function App() {
     };
     const exactQuery = new URLSearchParams({ track_name: track.name, artist_name: track.artists });
     fetch(LRCLIB + "/get?" + exactQuery.toString(), { headers })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error("No exact match")))
+      .then(r => r.ok ? r.json() : null)
+      .catch(() => null)
       .then(data => {
         if (applyLyrics(data)) return;
         const searchQuery = new URLSearchParams({ q: [track.name, track.artists].filter(Boolean).join(" ") });
@@ -136,15 +139,16 @@ function App() {
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
-      if (event.code === "Space") { event.preventDefault(); togglePlay(); }
-      else if (event.key === "ArrowLeft") { event.preventDefault(); seek(Math.max(0, position - 5000)); }
-      else if (event.key === "ArrowRight") { event.preventDefault(); seek(Math.min(track?.duration || position + 5000, position + 5000)); }
+      const current = playbackRef.current;
+      if (event.code === "Space") { event.preventDefault(); current.playing ? Spicetify.Player?.pause?.() : Spicetify.Player?.play?.(); }
+      else if (event.key === "ArrowLeft") { event.preventDefault(); seek(Math.max(0, current.position - 5000)); }
+      else if (event.key === "ArrowRight") { event.preventDefault(); seek(Math.min(current.duration || current.position + 5000, current.position + 5000)); }
       else if (event.key.toLowerCase() === "n") next();
       else if (event.key.toLowerCase() === "b") previous();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [playing, position, track?.duration]);
+  }, []);
 
   const updateLyricScale = value => {
     const nextValue = Number(value);
