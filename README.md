@@ -1,148 +1,129 @@
-<p align="center">
-  <img src="store-assets/marquee-1400x560.png" alt="Karafilt — real-time vocal removal for karaoke" width="900">
-</p>
+# VishuSingh
 
-# Karafilt
+An Apple Music Sing-inspired karaoke experience for Spotify Desktop.
 
-<p align="center">
-  <img src="icons/icon128.png" alt="Karafilt" width="96">
-</p>
+VishuSingh is an experimental Spicetify custom app with a dedicated karaoke-style page, synchronized lyric lookup, immersive mode, album art, and native Spotify playback controls. It is an independent project and is not affiliated with Apple or Spotify.
 
-<p align="center">
-  <strong>🌐 <a href="https://karafilt.com">karafilt.com</a></strong>
-</p>
+> **Status: early development.** The interface and lyric lookup are implemented on the feat/spicetify-integration branch, but have not yet been validated in a local Spotify installation. Real-time vocal removal is NOT available in the Spicetify app yet. The slider is intentionally disabled until a supported audio capture/mixing path is proven.
 
-**Real-time vocal removal for any browser tab.** Turn any song playing in Chrome into a karaoke track — no downloads, no uploads, just sign in and sing. Free.
+## Features
+- Sing-focused dark interface with album artwork and immersive mode.
+- Timed lyrics from LRCLIB when available; plain-lyrics fallback.
+- Click a timed lyric line to seek playback.
+- Spotify play/pause, previous/next, progress, and seeking controls.
+- Responsive layout and explicit loading/error states.
+- No fake vocal slider: audio processing is marked unavailable until it works.
 
-<p align="center">
-  <img src="store-assets/screenshot-1-hero.png" alt="Karafilt side panel showing synced lyrics over a YouTube video" width="820">
-</p>
+## Install in Spicetify on Windows
 
-## How It Works
+### Requirements
+- Spotify desktop app (not the web player).
+- Spicetify CLI installed and working: https://spicetify.app/docs/getting-started
 
-Karafilt captures audio from your active browser tab and removes the vocals in real time, entirely in your browser. It works with YouTube, Spotify Web Player, SoundCloud, or any website that plays audio. The audio never leaves your machine.
+Confirm your setup in PowerShell:
 
-<p align="center">
-  <img src="store-assets/screenshot-2-focus.png" alt="Karafilt karaoke focus mode" width="820">
-</p>
+    spicetify --version
 
-### Processing Modes
+If this is a fresh setup, finish Spicetify's initial installation and backup/apply steps before installing custom apps.
 
-| Mode | Quality | Latency |
-|------|---------|---------|
-| **Spectral (Good)** | Medium | Real-time |
-| **Spectral Deep (Strong)** | Higher (strips center backing vocals) | Real-time |
-| **Basic (Fast)** | Lower | Real-time |
+### 1. Download the app
+1. Open this repository on GitHub and select the feat/spicetify-integration branch.
+2. Click Code → Download ZIP and extract the archive.
+3. Open the extracted folder and locate spicetify/vishusingh.
+4. Copy the entire vishusingh folder into:
 
-All three modes run entirely in your browser using WebAssembly — no server, no uploads.
+    %appdata%\spicetify\CustomApps\
 
-<p align="center">
-  <img src="store-assets/screenshot-3-modes.png" alt="Karafilt processing mode dropdown" width="820">
-</p>
+The final paths must be directly inside the app folder:
 
-When a track has multiple matches (covers, live versions, remixes), pick the right one from the alternatives picker:
+    %appdata%\spicetify\CustomApps\vishusingh\manifest.json
+    %appdata%\spicetify\CustomApps\vishusingh\index.js
+    %appdata%\spicetify\CustomApps\vishusingh\style.css
 
-<p align="center">
-  <img src="store-assets/screenshot-4-picker.png" alt="Karafilt alternate-version picker" width="820">
-</p>
+Do not accidentally create CustomApps\vishusingh\spicetify\vishusingh.
 
-### Party Mode
+### 2. Enable it
+Completely exit Spotify, including from the system tray. Open PowerShell and run:
 
-Host a **karaoke party** straight from the extension: click **Party** in the side-panel header and a host page opens with a QR code. Guests scan it on their phones (no account needed), paste a YouTube link, and add songs to a **shared, real-time queue**. Songs play in order on your screen and auto-advance, with **synced lyrics** on the party screen and every guest's phone — and your vocal filter removing the lead vocals so everyone takes turns singing. Start filtering with a right-click (**Filter this tab with Karafilt**) or `Ctrl+Shift+K` — no side panel needed.
+    spicetify config custom_apps vishusingh
+    spicetify apply
 
-## Installation
+Start Spotify again and open VishuSingh from the sidebar. The config command appends the app to the existing custom-app list; it should not remove other custom apps.
 
-### From Chrome Web Store
+### Install from a Git clone (alternative)
+Run in PowerShell from the directory where you want to store the project:
 
-**[Install Karafilt from the Chrome Web Store →](https://chromewebstore.google.com/detail/eiclobknpdiipnhdpfpegfnkplmfnmoo)**
+    git clone --branch feat/spicetify-integration https://github.com/iamp1000/vishusinghs.git
+    $source = Join-Path (Get-Location) 'vishusinghs\spicetify\vishusingh'
+    $target = Join-Path $env:APPDATA 'spicetify\CustomApps\vishusingh'
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Copy-Item -Path (Join-Path $source '*') -Destination $target -Recurse -Force
 
-Karafilt is free — just create an account at **[karafilt.com](https://karafilt.com)** and sign in from the extension.
+Then close Spotify and run:
 
-### Manual Install (Developer Mode)
+    spicetify config custom_apps vishusingh
+    spicetify apply
 
-1. Download or clone this repository
-2. Open `chrome://extensions/` in Chrome
-3. Enable **Developer mode** (top-right toggle)
-4. Click **Load unpacked** and select this folder
-5. The Karafilt icon appears in your toolbar
+### Linux / macOS
+Copy the spicetify/vishusingh folder to ~/.config/spicetify/CustomApps/vishusingh, close Spotify, then run:
 
-## Usage
+    spicetify config custom_apps vishusingh
+    spicetify apply
 
-1. Click the Karafilt extension icon to open the side panel
-2. Sign in with your free Karafilt account
-3. Play a song in any tab (YouTube, Spotify, etc.)
-4. Choose a processing mode
-5. Adjust the **Vocal Removal** slider (0-100%)
-6. Click **Start Filtering**
+## Update
+Replace the contents of your installed CustomApps/vishusingh folder with the newest files from the branch. Close Spotify first, then run spicetify apply and relaunch Spotify.
 
-Your settings (mode, slider position) are saved automatically and persist across sessions.
+## Uninstall
+Run in PowerShell:
 
-## Support Karafilt ❤️
+    spicetify config custom_apps vishusingh-
+    spicetify apply
 
-Karafilt is free and open source — no ads, no subscriptions, no locked features.
-If it made your karaoke night, consider **[sponsoring on GitHub](https://github.com/sponsors/lemara98)**
-to help cover hosting and development time. Every sponsor gets a shout-out in
-[`SPONSORS.md`](SPONSORS.md).
+Then optionally delete %appdata%\spicetify\CustomApps\vishusingh. The trailing hyphen removes the app from Spicetify's enabled list.
 
-### 🏆 Headliners
+## Troubleshooting
+**App is missing from the sidebar**
+- Check that manifest.json and index.js are directly inside CustomApps\vishusingh.
+- Run spicetify config custom_apps and confirm vishusingh is listed.
+- Fully exit Spotify, run spicetify apply, and restart.
 
-*Your logo here — [become a Headliner](https://github.com/sponsors/lemara98) and get top billing on this README and [karafilt.com](https://karafilt.com).*
+**Blank page or app error**
+- Verify the files are from the same branch and manifest.json is valid JSON.
+- Try Ctrl+Shift+R in Spotify.
+- For diagnostics, run spicetify enable-devtools and open DevTools with Ctrl+Shift+I; check the console.
 
----
+**Lyrics are missing**
+- LRCLIB may not have a match for every song, remix, live version, or spelling.
+- Line highlighting requires timed lyrics; plain lyrics cannot sync line-by-line.
+- Track title and artist are sent to LRCLIB for lookup.
 
-## For Developers
+**Vocal removal does not work**
+This is expected in the current Spicetify build. A custom app does not automatically receive Spotify Desktop's decoded audio stream. Vocal processing is not active yet.
 
-### Repository layout
+## Privacy
+- The lyric lookup sends track title and artist to LRCLIB.
+- The Spicetify app does not intentionally send Spotify credentials or audio to LRCLIB.
+- Audio capture and vocal removal are not active in this Spicetify app yet.
 
-Karafilt spans **two repositories**:
+## Structure
+    spicetify/vishusingh/manifest.json
+    spicetify/vishusingh/index.js
+    spicetify/vishusingh/style.css
+    spicetify/vishusingh/README.md
+    docs/VISHUSINGH_SPICETIFY_PORT.md
 
-- **`karaoke-filter-plugin`** (this repo) — the Chrome extension (all in-browser; no
-  backend server).
-- **`website`** — the Next.js web app + API: free accounts, email verification,
-  reviews, donations, and self-serve account deletion.
+The repository also retains the upstream Karafilt browser-extension code and MIT license. The browser extension and Spicetify app are separate integration targets; Chrome tab-capture APIs are not automatically available in Spicetify.
 
-The extension uses the website only to confirm the user is signed in (a cookie-based
-`/api/me` probe) — there is no audio backend; all processing runs locally in the
-extension.
+## Roadmap
+- [x] Initial Spicetify app structure and responsive UI
+- [x] Spotify track metadata and playback controls
+- [x] LRCLIB timed/plain lyric lookup
+- [x] Click-to-seek lyric lines
+- [ ] Test and fix against supported Spotify + Spicetify versions
+- [ ] Verify real-time audio capture and output/mixing
+- [ ] Integrate vocal-removal engine into a proven audio path
+- [ ] Enable vocal slider only after real audio tests pass
+- [ ] Add verified screenshots and release packaging
 
-### Architecture
-
-```
-Browser Extension (Chrome Manifest V3)
-  ├── sidepanel/      — main UI (lyrics, mode, mix slider, sign-in gate)
-  ├── service-worker  — orchestrates capture lifecycle + lyrics lookups
-  ├── offscreen.js    — audio capture (Web Audio API)
-  ├── worklet-processor.js — real-time WASM processing on the audio thread
-  └── wasm/           — C source & compiled WebAssembly (STFT, center-cancel)
-```
-
-Audio is captured from the active tab and processed in real time by the WASM
-AudioWorklet — spectral / center-channel vocal cancellation, never uploaded.
-
-### Building the WASM Module
-
-Requires [Emscripten](https://emscripten.org/docs/getting_started/downloads.html):
-
-```bash
-make phase2   # builds wasm/build/vocal_remove.wasm
-```
-
-## License
-
-The Karafilt browser extension is open source under the **MIT License** — see
-[`LICENSE`](LICENSE).
-
-Third-party dependencies (Next.js, etc.) remain under their own licenses.
-
-Copyright © 2026 Betania.io.
-
-See also [`CONTRIBUTING.md`](CONTRIBUTING.md) and
-[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
-
----
-
-<p align="center">
-  <a href="https://karafilt.com"><img src="store-assets/promo-tile-440x280.png" alt="Karafilt — karafilt.com" width="360"></a>
-  <br>
-  <strong>🌐 <a href="https://karafilt.com">karafilt.com</a></strong>
-</p>
+## Credits and license
+This project builds on the MIT-licensed Karafilt project. See LICENSE for license terms and attribution. VishuSingh is not affiliated with Apple Music or Spotify.
