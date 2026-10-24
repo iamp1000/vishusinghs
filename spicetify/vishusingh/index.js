@@ -181,17 +181,8 @@ function App() {
     )
   );
 }
+// Spicetify calls render() and mounts the returned React element itself.
+// Do not call ReactDOM.render() or invoke render() manually here.
 function render() {
-  const container = document.getElementById("root") || document.body;
-  const dom = Spicetify.ReactDOM;
-  if (dom?.render) {
-    dom.render(h(App), container);
-    return;
-  }
-  if (dom?.createRoot) {
-    dom.createRoot(container).render(h(App));
-    return;
-  }
-  container.textContent = "VishuSingh could not start: ReactDOM is unavailable. Check the Spicetify installation.";
+  return h(App);
 }
-render();
