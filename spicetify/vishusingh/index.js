@@ -183,12 +183,13 @@ function App() {
 }
 function render() {
   const container = document.getElementById("root") || document.body;
-  if (typeof ReactDOM !== "undefined" && ReactDOM.render) {
-    ReactDOM.render(h(App), container);
+  const dom = Spicetify.ReactDOM;
+  if (dom?.render) {
+    dom.render(h(App), container);
     return;
   }
-  if (Spicetify.ReactDOM?.createRoot) {
-    Spicetify.ReactDOM.createRoot(container).render(h(App));
+  if (dom?.createRoot) {
+    dom.createRoot(container).render(h(App));
     return;
   }
   container.textContent = "VishuSingh could not start: ReactDOM is unavailable. Check the Spicetify installation.";
