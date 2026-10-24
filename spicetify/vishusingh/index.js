@@ -181,4 +181,16 @@ function App() {
     )
   );
 }
-function render() { return h(App); }
+function render() {
+  const container = document.getElementById("root") || document.body;
+  if (typeof ReactDOM !== "undefined" && ReactDOM.render) {
+    ReactDOM.render(h(App), container);
+    return;
+  }
+  if (Spicetify.ReactDOM?.createRoot) {
+    Spicetify.ReactDOM.createRoot(container).render(h(App));
+    return;
+  }
+  container.textContent = "VishuSingh could not start: ReactDOM is unavailable. Check the Spicetify installation.";
+}
+render();
