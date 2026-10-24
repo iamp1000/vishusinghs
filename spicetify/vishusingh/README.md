@@ -21,8 +21,10 @@ Linux/macOS: copy the folder to `~/.config/spicetify/CustomApps/vishusingh` and 
 
 - Apple Music Sing-inspired responsive layout and immersive mode.
 - Reads the current track, artwork, playback status, progress, and native player controls through Spicetify.
-- Fetches exact-match lyrics from LRCLIB; synchronized LRC lines follow playback and can be clicked to seek. Plain lyrics are shown when synced lyrics are unavailable.
+- Fetches exact-match lyrics from LRCLIB and falls back to ranked search results; synchronized LRC lines follow playback and can be clicked to seek. Multiple timestamps per LRC line are supported, and plain lyrics are shown when timed lyrics are unavailable.
 - Explicit loading/error states and cleanup of player listeners and lyric requests.
+- Persistent lyric-size and auto-scroll settings.
+- Keyboard shortcuts: Space play/pause, Left/Right seek five seconds, N next track, B previous track (disabled while typing in inputs).
 
 ## Important: vocal reduction is not active yet
 
