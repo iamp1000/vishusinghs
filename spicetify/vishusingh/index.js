@@ -26,6 +26,8 @@ function App() {
   const [mode, setMode] = useState("Sing");
   const [fullscreen, setFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [lyricScale, setLyricScale] = useState(() => { try { return Number(Spicetify.LocalStorage?.get("vishusingh:lyricScale")) || 1; } catch (_) { return 1; } });
+  const [autoScroll, setAutoScroll] = useState(() => { try { return Spicetify.LocalStorage?.get("vishusingh:autoScroll") !== "false"; } catch (_) { return true; } });
   const requestId = useRef(0);
   const rootRef = useRef(null);
 
@@ -124,9 +126,35 @@ function App() {
 
   const activeIndex = lyrics.reduce((idx, line, i) => line.time <= position ? i : idx, -1);
   useEffect(() => {
+    if (!autoScroll) return;
     const el = rootRef.current?.querySelector(".vs-lyric-active");
     el?.scrollIntoView?.({ behavior: "smooth", block: "center" });
-  }, [activeIndex, lyrics.length]);
+  }, [activeIndex, lyrics.length, autoScroll]);
+
+  useEffect(() => {
+    const onKeyDown = event => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (event.code === "Space") { event.preventDefault(); togglePlay(); }
+      else if (event.key === "ArrowLeft") { event.preventDefault(); seek(Math.max(0, position - 5000)); }
+      else if (event.key === "ArrowRight") { event.preventDefault(); seek(Math.min(track?.duration || position + 5000, position + 5000)); }
+      else if (event.key.toLowerCase() === "n") next();
+      else if (event.key.toLowerCase() === "b") previous();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [playing, position, track?.duration]);
+
+  const updateLyricScale = value => {
+    const nextValue = Number(value);
+    setLyricScale(nextValue);
+    try { Spicetify.LocalStorage?.set("vishusingh:lyricScale", String(nextValue)); } catch (_) {}
+  };
+  const updateAutoScroll = value => {
+    setAutoScroll(Boolean(value));
+    try { Spicetify.LocalStorage?.set("vishusingh:autoScroll", String(Boolean(value))); } catch (_) {}
+  };
 
   const seek = (value) => Spicetify.Player?.seek?.(Number(value));
   const togglePlay = () => playing ? Spicetify.Player?.pause?.() : Spicetify.Player?.play?.();
@@ -138,7 +166,7 @@ function App() {
       onClick: () => seek(line.time), title: "Seek to lyric" }, line.text || "♪")
   ) : plainLyrics ? plainLyrics.split(/\r?\n/).map((line, i) => h("p", { key: i, className: "vs-plain-line" }, line)) : null;
 
-  return h("main", { className: "vs-app" + (fullscreen ? " vs-fullscreen" : ""), ref: rootRef },
+  return h("main", { className: "vs-app" + (fullscreen ? " vs-fullscreen" : ""), ref: rootRef, style: { "--vs-lyric-scale": lyricScale } },
     h("header", { className: "vs-topbar" },
       h("div", { className: "vs-brand" }, h("span", { className: "vs-brand-mark" }, "✦"), h("span", null, "VishuSingh")),
       h("div", { className: "vs-top-actions" },
@@ -150,7 +178,9 @@ function App() {
     showSettings && h("section", { className: "vs-settings" },
       h("strong", null, "VishuSingh settings"),
       h("p", null, "Lyrics are requested from LRCLIB. Lyrics and playback remain separate from audio processing."),
-      h("p", null, "Vocal isolation is not enabled: Spicetify does not provide a supported decoded-audio capture API.")
+      h("p", null, "Vocal isolation is not enabled: Spicetify does not provide a supported decoded-audio capture API."),
+      h("label", { className: "vs-setting-row" }, h("span", null, "Lyric size"), h("input", { type: "range", min: 0.8, max: 1.5, step: 0.1, value: lyricScale, onChange: e => updateLyricScale(e.target.value), "aria-label": "Lyric size" })),
+      h("label", { className: "vs-setting-row" }, h("span", null, "Auto-scroll lyrics"), h("input", { type: "checkbox", checked: autoScroll, onChange: e => updateAutoScroll(e.target.checked), "aria-label": "Auto-scroll lyrics" }))
     ),
     h("section", { className: "vs-stage" },
       h("div", { className: "vs-backdrop", style: art ? { backgroundImage: "url(" + art + ")" } : {} }),
