@@ -250,6 +250,35 @@ function App() {
 }
 // Spicetify calls render() and mounts the returned React element itself.
 // Do not call ReactDOM.render() or invoke render() manually here.
+class VishuSinghErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error: error };
+  }
+  componentDidCatch(error, info) {
+    console.error("[VishuSingh] UI crashed:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      const message = this.state.error && this.state.error.message
+        ? this.state.error.message
+        : String(this.state.error);
+      return h("main", { className: "vs-app vs-error-screen" },
+        h("section", { className: "vs-error-card" },
+          h("div", { className: "vs-brand" }, h("span", { className: "vs-brand-mark" }, "✦"), h("span", null, "VishuSingh")),
+          h("h1", null, "VishuSingh hit a runtime error"),
+          h("p", null, "The page loaded, but one of its components failed. This diagnostic replaces Spotify’s generic error screen."),
+          h("pre", { className: "vs-error-detail" }, message),
+          h("p", null, "Open Spotify Developer Tools with Ctrl+Shift+I and check the Console for the full stack trace.")
+        )
+      );
+    }
+    return this.props.children;
+  }
+}
 function render() {
-  return h(App);
+  return h(VishuSinghErrorBoundary, null, h(App));
 }
